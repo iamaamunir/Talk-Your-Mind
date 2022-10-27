@@ -11,6 +11,15 @@ const userSchema = new schema ({
     password:{
         type:String,
         required:[true, 'Password is required']
+    },
+
+    first_name:{
+        type:String,
+        required:[true, 'first name is required']
+    },
+    last_name:{
+        type:String,
+        required:[true, 'last name is required']
     }
 })
 
