@@ -7,7 +7,7 @@ require("dotenv").config();
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: false }));
 
-app.use(express.json())
+ app.use(express.json())
 
 const userRouter = require("./routes/authRoute");
 const articleRouter = require('./routes/articleRoute')
