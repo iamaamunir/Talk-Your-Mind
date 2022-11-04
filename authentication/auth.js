@@ -1,3 +1,5 @@
+// 2. A user should be able to sign up and sign in into the blog app
+
 const passport = require("passport");
 const JWTStrategy = require("passport-jwt").Strategy;
 const ExtractJWT = require("passport-jwt").ExtractJwt;
@@ -5,21 +7,22 @@ const localStrategy = require("passport-local").Strategy;
 require("dotenv").config();
 const userModel = require("../models/userModel");
 
-const opts = {};
-opts.secretOrKey = process.env.JWT_SECRET;
-opts.jwtFromRequest = ExtractJWT.fromUrlQueryParameter("secret_token");
-
 // Auth endpoints with JWTStrategy
 passport.use(
-  new JWTStrategy(opts, async (token, done) => {
-    try {
-      done(null, token.user);
-    } catch (err) {
-      done(err);
+  new JWTStrategy(
+    {
+      secretOrKey: process.env.JWT_SECRET,
+      jwtFromRequest: ExtractJWT.fromAuthHeaderAsBearerToken(),
+    },
+    async (token, done) => {
+      try {
+        return done(null, token.user);
+      } catch (err) {
+        done(err);
+      }
     }
-  })
+  )
 );
-
 
 // AUth email and password with passport-local
 
@@ -28,13 +31,13 @@ passport.use(
   new localStrategy(
     {
       usernameField: "email",
-         passwordField: "password",
-      passReqToCallback: true
+      passwordField: "password",
+      passReqToCallback: true,
     },
     async (req, email, password, done) => {
       try {
-        const first_name = req.body.first_name
-        const last_name = req.body.last_name
+        const first_name = req.body.first_name;
+        const last_name = req.body.last_name;
         const user = await userModel.create({
           email,
           first_name,
@@ -51,7 +54,7 @@ passport.use(
 
 passport.use(
   "login",
-//   create strategy and configure state
+  //   create strategy and configure state
   new localStrategy(
     {
       usernameField: "email",
