@@ -3,7 +3,7 @@ const passport = require("passport");
 require('dotenv').config()
 
 exports.signUp = async (req,res,next)=>{
-    const body = {_id:req.user._id, email:req.user.email, password:req.user.password}
+    // const body = {_id:req.user._id, email:req.user.email, password:req.user.password}
     try{
         // const token = jwt.sign({ user: body }, process.env.JWT_SECRET);
     res.json({
@@ -27,12 +27,16 @@ exports.login = async (req,res,next)=>{
                 const error = new Error('Username or password is incorrect')
                 return next(error)
             }
+            
             req.login(user, {session:false}, async (error)=>{
                 if(error) return next(error)
-                const body = {_id:user._id, email:user.email, password:user.password}
-                const token = jwt.sign({user:body}, 'Stack', {expiresIn: '1hr'}, process.env.JWT_SECRET )
+                const body = {_id:user._id, email:user.email}
+                const token = jwt.sign({user:body}, process.env.JWT_SECRET, {expiresIn:'1hr'} )
                 return res.json({token})
             })
+            
+            
+            next()
         }
         catch(err){
             return next(err)
