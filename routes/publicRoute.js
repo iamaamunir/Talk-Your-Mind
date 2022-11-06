@@ -8,7 +8,7 @@ publicRouter.get('/blog/publish/:id', publicController.getPublishedArticle)
 
 publicRouter.get('/blog/list', publicController.getBlogList)
 
-publicRouter.get('/blog/')
+
 module.exports = publicRouter
 
 
