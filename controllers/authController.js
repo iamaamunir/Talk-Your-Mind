@@ -3,13 +3,13 @@ const passport = require("passport");
 require('dotenv').config()
 
 exports.signUp = async (req,res,next)=>{
-    // const body = {_id:req.user._id, email:req.user.email, password:req.user.password}
+ 
     try{
-        // const token = jwt.sign({ user: body }, process.env.JWT_SECRET);
-    res.json({
-       message: "Signup successful",
+       
+    res.status(201).send({
+    
        user: req.user,
-    //    token
+    
      });
     }
     catch(err){
@@ -32,7 +32,7 @@ exports.login = async (req,res,next)=>{
                 if(error) return next(error)
                 const body = {_id:user._id, email:user.email}
                 const token = jwt.sign({user:body}, process.env.JWT_SECRET, {expiresIn:'1hr'} )
-                return res.json({token})
+                return res.status(200).json({token})
             })
             
             
