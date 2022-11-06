@@ -287,6 +287,7 @@ Success
 }
 ```
 
+
 ### Get update state with id
 
 - Route: /api/blog/me/edit/:id
@@ -372,6 +373,54 @@ Success
 
 ```
 
+```
+
+### Get published blog list with not logged in user
+
+- Route: /api/blog/me/list'
+- Method:GET
+- Header:
+  - Authorization: Bearer {token}
+
+- Query params:
+  - id
+  - firstname
+  - lastname
+  - timestamp
+  - reading_time
+  - read_count
+ 
+- Responses
+
+Success
+
+```
+[
+    
+    "article": {
+    "_id": "6363cd9d7f752e876317a830",
+    "title": "title",
+    "description": "description",
+    "author": {
+      "_id": "636266fea10ebec99154bb55",
+      "first_name": "john",
+      "last_name": "doe"
+    },
+     "state": "published",
+    "read_count": 4,
+    "reading_time": "0mins:57secs",
+    "tags": [
+      "#nodejs"
+    ],
+    "body": "body content",
+    "timestamp": "2022-11-03T14:18:05.747Z",
+    
+}
+]
+
+```
+
+
 ### delete blog with id
 
 - Route: /api/blog/me/delete/:id
@@ -431,7 +480,7 @@ Success
 
 ### Get published blog list with not logged in user
 
-- Route: /api/blog/publish'
+- Route: /api/blog/list'
 - Method:GET
 
 - Query params:
