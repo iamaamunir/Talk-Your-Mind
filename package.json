@@ -6,7 +6,7 @@
   "scripts": {
     
     "start":"node index.js",
-     "test": "cross-env jest --testEnvironment=node --verbose --forceExit --watchAll --maxWorkers=1 --detectOpenHandles",
+     "test": "cross-env jest --testEnvironment=node --verbose --forceExit --watchAll --maxWorkers=1 --detectOpenHandles"
   },
   "keywords": [],
   "author": "",
