@@ -18,11 +18,12 @@ app.use('/api', publicRouter)
 app.use("/api", userRouter);
 app.use('/api', passport.authenticate('jwt', { session: false }), articleRouter)
 
-const { DbConnection } = require("./config/dbConnection");
-DbConnection();
+app.use(async (err,req,res,next) => {
+    const status = err.status || 500
+    const message = err.message || "server error"
 
-const PORT = process.env.PORT;
+    return res.status(status).send(message)
+})
 
-app.listen(PORT, () => {
-  console.log(`APP IS RUNNING AT ${PORT}`);
-});
+
+module.exports = app
