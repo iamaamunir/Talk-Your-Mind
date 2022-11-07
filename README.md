@@ -18,22 +18,25 @@ This is an api for a blogging app
 9. The owner of the blog should be able to update the state of the blog to published
 10. The owner of a blog should be able to edit the blog in draft or published state
 11. The owner of the blog should be able to delete the blog in draft or published state
-
-12.The owner of the blog should be able to get a list of their blogs.
-    a. The endpoint should be paginated
-    b. It should be filterable by state
-
-13.Blogs created should have title, description, tags, author, timestamp, state,
-    read_count, reading_time and body.
+12. The owner of the blog should be able to get a list of their blogs.
     
-    14.The list of blogs endpoint that can be accessed by both logged in and not logged
-    in users should be paginated,
-    a. default it to 20 blogs per page.
-    b. It should also be searchable by author, title and tags.
-    c. It should also be orderable by read_count, reading_time and timestamp
-    15.When a single blog is requested, the api should return the user information with
-    the blog. The read_count of the blog too should be updated by 1
-    16.Come up with any algorithm for calculating the reading_time of the blog.
+    a.  The endpoint should be paginated
+    
+    b.  It should be filterable by state
+
+  13. Blogs created should have title, description, tags, author, timestamp, state, read_count, reading_time and body.
+  14. The list of blogs endpoint that can be accessed by both logged in and not logged in users should be paginated,
+      
+      a.  default it to 20 blogs per page.
+      
+      b.It should also be searchable by author, title and tags.
+
+      c.It should also be orderable by read_count, reading_time and timestamp
+
+  15. When a single blog is requested, the api should return the user information with
+the blog. The read_count of the blog too should be updated by 1.
+
+  16. Come up with any algorithm for calculating the reading_time of the blog
 
 ---
 
@@ -42,7 +45,8 @@ This is an api for a blogging app
 - Install NodeJS, mongodb
 - pull this repo
 - update env with example.env
-- run `npm run start:dev`
+- run `npm run start`
+- run `node index.js`
 
 ---
 
@@ -177,7 +181,7 @@ Success
 
 ### Get article by owner
 
-- Route: /api/blog/me
+- Route: /api/blog/me/get
 - Method: GET
 - Header
   - Authorization: Bearer {token}
@@ -189,8 +193,8 @@ Success
 [
     {
  "_id": "6363c14586e8598bc3bfeef7",
-    "title": "blog title",
-    "description": "some description about the blog",
+    "title": "blog title 1",
+    "description": "some description about the blog 1",
     "author": {
       "_id": "636266fea10ebec99154bb55",
       "first_name": "john",
@@ -200,9 +204,26 @@ Success
     "read_count": 0,
     "reading_time": "0mins:00secs",
     "tags": [
-      "#blog"
+      "#blog 1"
     ],
-    "body": "blog content"
+    "body": "blog content 1"
+    },
+      {
+ "_id": "6363c14586e8598bc3bfeef7",
+    "title": "blog title 2",
+    "description": "some description about the blog 2",
+    "author": {
+      "_id": "636266fea10ebec99154bb55",
+      "first_name": "john",
+      "last_name": "doe"
+    },
+    "state": "draft",
+    "read_count": 0,
+    "reading_time": "0mins:00secs",
+    "tags": [
+      "#blog 2"
+    ],
+    "body": "blog content 2"
     }
 ]
 ```
@@ -223,27 +244,23 @@ Success
 Success
 
 ```
-{
-    
-    "article": {
-    "_id": "6363cd9d7f752e876317a830",
-    "title": "title",
-    "description": "description",
+ {
+ "_id": "6363c14586e8598bc3bfeef7",
+    "title": "blog title 1",
+    "description": "some description about the blog 1",
     "author": {
       "_id": "636266fea10ebec99154bb55",
       "first_name": "john",
       "last_name": "doe"
     },
-     "state": "published",
-    "read_count": 4,
-    "reading_time": "0mins:57secs",
+    "state": "published",
+    "read_count": 0,
+    "reading_time": "0mins:00secs",
     "tags": [
-      "#nodejs"
+      "#blog 1"
     ],
-    "body": "body content",
-    "timestamp": "2022-11-03T14:18:05.747Z",
-    
-}
+    "body": "blog content 1"
+    }
 ```
 
 ### Get update blog with id
@@ -277,11 +294,11 @@ Success
     },
      "state": "published",
     "read_count": 4,
-    "reading_time": "0mins:57secs",
+    "reading_time": "0mins:00secs",
     "tags": [
       "#nodejs"
     ],
-    "body": "body content",
+    "body": "body content edit",
     "timestamp": "2022-11-03T14:18:05.747Z",
     
 }
@@ -310,18 +327,18 @@ Success
     
     "article": {
     "_id": "6363cd9d7f752e876317a830",
-    "title": "title",
-    "description": "description",
+    "title": "blog title",
+    "description": "blog description",
     "author": {
       "_id": "636266fea10ebec99154bb55",
       "first_name": "john",
       "last_name": "doe"
     },
-     "state": "published",
+     "state": "published updated",
     "read_count": 4,
-    "reading_time": "0mins:57secs",
+    "reading_time": "0mins:00secs",
     "tags": [
-      "#nodejs"
+      "#blog tag"
     ],
     "body": "body content",
     "timestamp": "2022-11-03T14:18:05.747Z",
@@ -375,7 +392,7 @@ Success
 
 ```
 
-### Get published blog list with not logged in user
+### Get published blog list with logged in user
 
 - Route: /api/blog/me/list'
 - Method:GET
