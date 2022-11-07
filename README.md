@@ -52,7 +52,7 @@ the blog. The read_count of the blog too should be updated by 1.
 
 ## Base URL
 
-- somehostsite.com
+- https://talk-your-mind02.herokuapp.com/
 
 ## Models
 
