@@ -1,6 +1,6 @@
-const articleModel = require("../models/articleModel");
+const Article = require("../models/articleModel");
 const userModel = require("../models/userModel");
-
+const APIFeatures = require("./../utils/apiFeatures");
 // 7. Logged in users should be able to create a blog.
 
 const createArticle = async (req, res, next) => {
@@ -11,10 +11,9 @@ const createArticle = async (req, res, next) => {
     // read_count, reading_time and body.
     const user = await userModel.findById(req.user._id);
     const totalWordCount = body.split(" ").length;
-    const time = totalWordCount / 200;
-    const [min, sec] = time.toString().split(".");
-    const roundedSec = Math.round(sec * 0.6);
-    const reading_time = `${min}mins:${roundedSec}secs`;
+    const wordsPerMinute = totalWordCount / 200;
+    const reading_time =
+      Math.round(wordsPerMinute) === 0 ? 1 : Math.round(wordsPerMinute);
 
     const articleObject = {
       title,
@@ -46,22 +45,24 @@ const createArticle = async (req, res, next) => {
 // a. The endpoint should be paginated
 // b. It should be filterable by state
 
-async function getBlogByOwner(req, res) {
+async function getBlogByOwner(req, res, next) {
   try {
-    if (req.query.limit || req.query.state) {
-      const limit = parseInt(req.query.limit);
-      const articles = await articleModel
-        .find({ state: req.query.state, author: { _id: req.user._id } })
-        .limit(limit)
-        .populate("author", "first_name last_name");
-      res.status(200).send(articles);
-    } else {
-      const articles = await articleModel
-        .find({ author: { _id: req.user._id } })
-        .populate("author", "first_name last_name");
-      res.status(200).send(articles);
+    const currentUser = await userModel.find({ author: { _id: req.user._id } });
+    if (currentUser) {
+      const features = new APIFeatures(Article.find(), req.query)
+        .state()
+        .paginate();
+      const posts = await features.query;
+      res.status(200).json({
+        status: "success",
+        results: posts.length,
+        data: {
+          posts,
+        },
+      });
     }
   } catch (err) {
+    console.log(err);
     err.status = 404;
     err.message = "the error is from here";
     next(err);
@@ -104,7 +105,7 @@ async function updateStateById(req, res) {
   const state = req.body.state;
 
   if (state == "published") {
-    const article = await articleModel.findById(id);
+    const article = await Article.findById(id);
     if (!article) {
       return res
         .status(500)
@@ -149,16 +150,18 @@ async function deleteById(req, res, next) {
   try {
     const id = req.params.id;
     const article = await articleModel.findById(id);
-if(!article){
-  res.status(400).send({message:"Article does not exist"})
-}
+    if (!article) {
+      res.status(400).send({ message: "Article does not exist" });
+    }
     const owner = article.author.toString();
     const user = await userModel.findById(req.user._id);
     if (owner === req.user._id) {
       await article.deleteOne();
-      user.article = user.article.filter((post)=>post.toString()!==article._id.toString())
-    await user.save();
-      return res.status(200).send({message:"Article deleted successfully"});
+      user.article = user.article.filter(
+        (post) => post.toString() !== article._id.toString()
+      );
+      await user.save();
+      return res.status(200).send({ message: "Article deleted successfully" });
     }
   } catch (err) {
     err.status = 404;
@@ -172,7 +175,7 @@ if(!article){
 // b. It should also be searchable by author, title and tags.
 // c. It should also be orderable by read_count, reading_time and timestamp
 async function getBlogList(req, res) {
-  const article = await articleModel.find({});
+  // const article = await articleModel.find({});
   const firstname = req.query.firstname;
   const lastname = req.query.lastname;
   const title = req.query.title;
@@ -182,206 +185,143 @@ async function getBlogList(req, res) {
   const timestamp = req.query.timestamp;
   const page = req.query.page;
   const limit = 20;
-  if (read_count === "asc") {
-    try {
-      const result = await articleModel
-        .find({ author: { _id: req.user._id } })
-        .limit(limit)
-        .skip((page - 1) * limit)
-        .sort({ read_count: 1 })
-        .populate("author", "first_name last_name");
+  const features = new APIFeatures(Article.find(), req.query)
+    .sort()
+    .paginate()
 
-      return res.status(200).send(result);
-    } catch (err) {
-      res.status(500).send({ message: "Unable to order by read_count" });
-    }
-  } else if (read_count === "desc") {
-    try {
-      const result = await articleModel
-        .find({ author: { _id: req.user._id } })
-        .limit(limit)
-        .skip((page - 1) * limit)
-        .sort({ read_count: -1 })
-        .populate("author", "first_name last_name");
-
-      return res.status(200).send(result);
-    } catch (err) {
-      res.status(500).send({ message: "Unable to order by read_count" });
-    }
-  }
-  if (reading_time === "asc") {
-    try {
-      const result = await articleModel
-        .find({ author: { _id: req.user._id } })
-        .limit(limit)
-        .skip((page - 1) * limit)
-        .sort({ reading_time: 1 })
-        .populate("author", "first_name last_name");
-      return res.status(200).send(result);
-    } catch (err) {
-      res.status(500).send({ message: "Unable to order by reading_time" });
-    }
-  } else if (reading_time === "desc") {
-    try {
-      const result = await articleModel
-        .find({ author: { _id: req.user._id } })
-        .limit(limit)
-        .skip((page - 1) * limit)
-        .sort({ reading_time: -1 })
-        .populate("author", "first_name last_name");
-      return res.status(200).send(result);
-    } catch (err) {
-      res.status(500).send({ message: "Unable to order by reading_time" });
-    }
-  }
-  if (timestamp === "asc") {
-    try {
-      const result = await articleModel
-        .find({ author: { _id: req.user._id } })
-        .limit(limit)
-        .skip((page - 1) * limit)
-        .sort({ timestamp: 1 })
-        .populate("author", "first_name last_name");
-      return res.status(200).send(result);
-    } catch (err) {
-      res.status(500).send({ message: "Unable to order by timestamp" });
-    }
-  } else if (timestamp === "desc") {
-    try {
-      const result = await articleModel
-        .find({ state: "published" })
-        .limit(limit)
-        .skip((page - 1) * limit)
-        .sort({ timestamp: -1 })
-        .populate("author", "first_name last_name");
-      return res.status(200).send(result);
-    } catch (err) {
-      res.status(500).send({ message: "Unable to order by timestamp" });
-    }
-  }
-  // if(article.state == 'published'){
-
-  if (firstname) {
-    try {
-      const user = await userModel.findOne({ first_name: firstname });
-
-      const userId = user.article.toString().split(",");
-
-      for (let i = 0; i < userId.length; i++) {
-        if (userId[i] === "") {
-          userId.splice(i, 1);
-          i--;
-        }
-      }
-
-      const articles = await articleModel
-        .find({ _id: { $in: userId } })
-        .limit(limit)
-        .skip((page - 1) * limit)
-        .populate("author", "first_name last_name");
-      return res.status(200).send(articles);
-    } catch (err) {
-      return res.status(404).send({ message: "Unable to filter by name" });
-    }
-  }
-  if (firstname) {
-    try {
-      const user = await userModel.findOne({ first_name: firstname });
-
-      const userId = user.article.toString().split(",");
-
-      for (let i = 0; i < userId.length; i++) {
-        if (userId[i] === "") {
-          userId.splice(i, 1);
-          i--;
-        }
-      }
-
-      const articles = await articleModel
-        .find({ _id: { $in: userId } })
-        .limit(limit)
-        .skip((page - 1) * limit)
-        .populate("author", "first_name last_name");
-      return res.status(200).send(articles);
-    } catch (err) {
-      return res.status(404).send({ message: "Unable to filter by name" });
-    }
-  }
-  if (lastname) {
-    try {
-      const user = await userModel.findOne({ last_name: lastname });
-
-      const userId = user.article.toString().split(",");
-
-      for (let i = 0; i < userId.length; i++) {
-        if (userId[i] === "") {
-          userId.splice(i, 1);
-          i--;
-        }
-      }
-
-      const articles = await articleModel
-        .find({ _id: { $in: userId } })
-        .limit(limit)
-        .skip((page - 1) * limit)
-        .populate("author", "first_name last_name");
-      return res.status(200).send(articles);
-    } catch (err) {
-      return res.status(404).send({ message: "Unable to filter by name" });
-    }
-  }
-  if (firstname && lastname) {
-    try {
-      const user = await userModel.findOne({
-        first_name: firstname,
-        last_name: lastname,
-      });
-
-      const userId = user.article.toString().split(",");
-
-      for (let i = 0; i < userId.length; i++) {
-        if (userId[i] === "") {
-          userId.splice(i, 1);
-          i--;
-        }
-      }
-
-      const articles = await articleModel
-        .find({ _id: { $in: userId } })
-        .limit(limit)
-        .skip((page - 1) * limit)
-        .populate("author", "first_name last_name");
-      return res.status(200).send(articles);
-    } catch (err) {
-      return res.status(404).send({ message: "Unable to filter by name" });
-    }
-  }
-
-  if (title) {
-    try {
-      const result = await articleModel
-        .find({ title: title, state: "published" })
-        .limit(limit)
-        .skip((page - 1) * limit)
-        .populate("author", "first_name last_name");
-      return res.status(200).send(result);
-    } catch (err) {
-      res.status(500).send({ message: "Unable to filter by title" });
-    }
-  }
-  if (tags) {
-    try {
-      const result = await articleModel
-        .find({ tags: [tags], state: "published" })
-        .limit(limit)
-        .skip((page - 1) * limit)
-        .populate("author", "first_name last_name");
-      return res.status(200).send(result);
-    } catch (err) {
-      res.status(500).send({ message: "Unable to filter by tags" });
-    }
-  }
+    .search();
+  const tours = await features.query;
+  res.status(200).json({
+    status: "success",
+    results: tours.length,
+    data: {
+      tours,
+    },
+  });
 }
+// if(article.state == 'published'){
+
+//   if (firstname) {
+//     try {
+//       const user = await userModel.findOne({ first_name: firstname });
+
+//       const userId = user.article.toString().split(",");
+
+//       for (let i = 0; i < userId.length; i++) {
+//         if (userId[i] === "") {
+//           userId.splice(i, 1);
+//           i--;
+//         }
+//       }
+
+//       const articles = await articleModel
+//         .find({ _id: { $in: userId } })
+//         .limit(limit)
+//         .skip((page - 1) * limit)
+//         .populate("author", "first_name last_name");
+//       return res.status(200).send(articles);
+//     } catch (err) {
+//       return res.status(404).send({ message: "Unable to filter by name" });
+//     }
+//   }
+//   if (firstname) {
+//     try {
+//       const user = await userModel.findOne({ first_name: firstname });
+
+//       const userId = user.article.toString().split(",");
+
+//       for (let i = 0; i < userId.length; i++) {
+//         if (userId[i] === "") {
+//           userId.splice(i, 1);
+//           i--;
+//         }
+//       }
+
+//       const articles = await articleModel
+//         .find({ _id: { $in: userId } })
+//         .limit(limit)
+//         .skip((page - 1) * limit)
+//         .populate("author", "first_name last_name");
+//       return res.status(200).send(articles);
+//     } catch (err) {
+//       return res.status(404).send({ message: "Unable to filter by name" });
+//     }
+//   }
+//   if (lastname) {
+//     try {
+//       const user = await userModel.findOne({ last_name: lastname });
+
+//       const userId = user.article.toString().split(",");
+
+//       for (let i = 0; i < userId.length; i++) {
+//         if (userId[i] === "") {
+//           userId.splice(i, 1);
+//           i--;
+//         }
+//       }
+
+//       const articles = await articleModel
+//         .find({ _id: { $in: userId } })
+//         .limit(limit)
+//         .skip((page - 1) * limit)
+//         .populate("author", "first_name last_name");
+//       return res.status(200).send(articles);
+//     } catch (err) {
+//       return res.status(404).send({ message: "Unable to filter by name" });
+//     }
+//   }
+//   if (firstname && lastname) {
+//     try {
+//       const user = await userModel.findOne({
+//         first_name: firstname,
+//         last_name: lastname,
+//       });
+
+//       const userId = user.article.toString().split(",");
+
+//       for (let i = 0; i < userId.length; i++) {
+//         if (userId[i] === "") {
+//           userId.splice(i, 1);
+//           i--;
+//         }
+//       }
+
+//       const articles = await articleModel
+//         .find({ _id: { $in: userId } })
+//         .limit(limit)
+//         .skip((page - 1) * limit)
+//         .populate("author", "first_name last_name");
+//       return res.status(200).send(articles);
+//     } catch (err) {
+//       return res.status(404).send({ message: "Unable to filter by name" });
+//     }
+//   }
+
+//   if (title) {
+//     try {
+//       const result = await articleModel
+//         .find({ title: title, state: "published" })
+//         .limit(limit)
+//         .skip((page - 1) * limit)
+//         .populate("author", "first_name last_name");
+//       return res.status(200).send(result);
+//     } catch (err) {
+//       res.status(500).send({ message: "Unable to filter by title" });
+//     }
+//   }
+//   if (tags) {
+//     try {
+//       const result = await articleModel
+//         .find({ tags: [tags], state: "published" })
+//         .limit(limit)
+//         .skip((page - 1) * limit)
+//         .populate("author", "first_name last_name");
+//       return res.status(200).send(result);
+//     } catch (err) {
+//       res.status(500).send({ message: "Unable to filter by tags" });
+//     }
+//   }
+// }
 
 module.exports = {
   createArticle,

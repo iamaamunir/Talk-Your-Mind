@@ -1,12 +1,16 @@
-const app = require('./app')
-const {DbConnection} = require('./config/dbConnection')
+const http = require("http");
 
-require('dotenv').config()
+const app = require("./app");
 
-DbConnection()
+const config = require("./config/config");
 
-const PORT = process.env.PORT
+const PORT = config.PORT || 5000;
 
-app.listen(PORT, ()=>{
-    console.log('App is running at',PORT)
-})
+const connectToDb = require("./db/dbConnection");
+connectToDb();
+
+const server = http.createServer(app);
+
+server.listen(PORT, () => {
+  console.log(`Server is listening at port: ${PORT}`);
+});
