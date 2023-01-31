@@ -42,6 +42,7 @@ class APIFeatures {
     this.query = this.query
       .limit(limit * 1)
       .skip((page - 1) * limit)
+      .populate("author", "first_name last_name")
       .exec();
 
     return this;

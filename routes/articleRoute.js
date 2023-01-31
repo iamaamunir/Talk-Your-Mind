@@ -1,18 +1,27 @@
-const express = require('express')
-const articleRouter = express.Router()
+const express = require("express");
+const articleRouter = express.Router();
 
-const articleController = require('../controllers/articleController')
+const articleController = require("../controllers/articleController");
 
+const articleValidator = require("../validators/article.validator");
 
-articleRouter.post('/blog/create', articleController.createArticle)
+// articleRouter.post(
+//   "/blog/create",
+//   articleValidator,
+//   articleController.createArticle
+// );
 
+articleRouter
+  .route("/blog")
+  .post(articleValidator, articleController.createArticle)
+  .get(articleController.getBlogByOwner);
 
-articleRouter.get('/blog/me/get',  articleController.getBlogByOwner)
+articleRouter.get("/blog/publish/:id", articleController.getPublishedArticle);
+articleRouter
+  .route("/blog/:id")
+  .patch(articleController.updateById)
+  .delete(articleController.deleteById);
+articleRouter.patch("/blog/state/:id", articleController.updateStateById);
+articleRouter.get("/blog/list", articleController.getBlogList);
 
-articleRouter.get('/blog/me/publish/:id', articleController.getPublishedArticle)
-articleRouter.patch('/blog/me/edit/:id', articleController.updateById)
-articleRouter.patch('/blog/me/edit/state/:id', articleController.updateStateById)
-articleRouter.delete('/blog/me/delete/:id', articleController.deleteById)
-articleRouter.get('/blog/me/list' , articleController.getBlogList)
-
-module.exports = articleRouter
+module.exports = articleRouter;

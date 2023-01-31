@@ -1,5 +1,5 @@
 const Article = require("../models/articleModel");
-const userModel = require("../models/userModel");
+const User = require("../models/userModel");
 const APIFeatures = require("./../utils/apiFeatures");
 // 7. Logged in users should be able to create a blog.
 
@@ -9,7 +9,7 @@ const createArticle = async (req, res, next) => {
 
     //     13.Blogs created should have title, description, tags, author, timestamp, state,
     // read_count, reading_time and body.
-    const user = await userModel.findById(req.user._id);
+    const user = await User.findById(req.user._id);
     const totalWordCount = body.split(" ").length;
     const wordsPerMinute = totalWordCount / 200;
     const reading_time =
@@ -20,13 +20,10 @@ const createArticle = async (req, res, next) => {
       description,
       tags,
       author: { _id: req.user._id },
-      timestamp: Date.now(),
       reading_time,
       body,
     };
-
-    const article = new articleModel(articleObject);
-
+    const article = new Article(articleObject);
     const savedArticle = await article.save();
     user.article = user.article.concat(savedArticle._id);
     await user.save();
@@ -37,6 +34,7 @@ const createArticle = async (req, res, next) => {
   } catch (err) {
     err.status = 404;
     err.message = "the error is from here";
+    console.log(err);
     next(err);
   }
 };
@@ -47,20 +45,18 @@ const createArticle = async (req, res, next) => {
 
 async function getBlogByOwner(req, res, next) {
   try {
-    const currentUser = await userModel.find({ author: { _id: req.user._id } });
-    if (currentUser) {
-      const features = new APIFeatures(Article.find(), req.query)
-        .state()
-        .paginate();
-      const posts = await features.query;
-      res.status(200).json({
-        status: "success",
-        results: posts.length,
-        data: {
-          posts,
-        },
-      });
-    }
+    const features = new APIFeatures(
+      Article.find({ author: { _id: req.user._id } }),
+      req.query
+    ).paginate();
+    const posts = await features.query;
+    res.status(200).json({
+      status: "success",
+      results: posts.length,
+      data: {
+        posts,
+      },
+    });
   } catch (err) {
     console.log(err);
     err.status = 404;
@@ -71,75 +67,87 @@ async function getBlogByOwner(req, res, next) {
 
 // // 10. The owner of a blog should be able to edit the blog in draft or published state
 
-async function updateById(req, res) {
-  const id = req.params.id;
-
-  const { body } = req.body;
-  const article = await articleModel.findById(id);
-  const totalWordCount = body.split(" ").length;
-  const time = totalWordCount / 200;
-  const [min, sec] = time.toString().split(".");
-  const roundedSec = Math.round(sec * 0.6);
-  const reading_time = `${min}mins:${roundedSec}secs`;
-  if (!article) {
-    return res
-      .status(400)
-      .json({ status: false, message: "Article cant be found" });
-  }
-  const owner = article.author.toString();
-
-  if (owner === req.user._id) {
-    article.body = body;
-    article.reading_time = reading_time;
-    await article.save();
-    res.status(200).send(article);
-  } else {
-    res.status(403).send({ message: "Unauthorized" });
+async function updateById(req, res, next) {
+  try {
+    const id = req.params.id;
+    const { body } = req.body;
+    const article = await Article.findById(id);
+    if (!article) {
+      return res
+        .status(400)
+        .json({ status: false, message: "Article cant be found" });
+    }
+    // const user = await User.findById(req.user._id);
+    const totalWordCount = body.split(" ").length;
+    const wordsPerMinute = totalWordCount / 200;
+    const reading_time =
+      Math.round(wordsPerMinute) === 0 ? 1 : Math.round(wordsPerMinute);
+    const blogAuthor = article.author.toString();
+    const currentUser = req.user._id;
+    if (blogAuthor === currentUser) {
+      article.body = body;
+      article.reading_time = reading_time;
+      await article.save();
+      res.status(204).json({ message: "Update successfull" });
+    }
+  } catch (err) {
+    console.log(err);
+    err.status = 404;
+    err.message = "the error is from here";
+    next(err);
   }
 }
 
 // // 9. The owner of the blog should be able to update the state of the blog to published
 
-async function updateStateById(req, res) {
-  const id = req.params.id;
-  const state = req.body.state;
-
-  if (state == "published") {
+async function updateStateById(req, res, next) {
+  try {
+    const id = req.params.id;
+    const state = req.body.state;
     const article = await Article.findById(id);
     if (!article) {
       return res
         .status(500)
         .json({ status: false, message: "Article does not exist" });
     }
-    const owner = article.author.toString();
-
-    if (req.user._id === owner) {
+    const blogAuthor = article.author.toString();
+    const currentUser = req.user._id;
+    if (state === "published" && blogAuthor === currentUser) {
       article.state = state;
-
       await article.save();
-      res.status(200).send(article);
+      res.status(204).json({
+        status: "success",
+        message: "Update successful",
+      });
     } else {
-      res.status(403).send({ message: "Unauthorized" });
+      return res.status(400).json({
+        status: false,
+        message: "Article already published or you are not authorized",
+      });
     }
-  } else {
-    res.status(200).send("Blog has already been published");
+  } catch (err) {
+    console.log(err);
+    err.status = 404;
+    err.message = "the error is from here";
+    next(err);
   }
 }
+
 // 6. users should be able to to get a published blog
 
 const getPublishedArticle = async (req, res) => {
-  const id = req.params.id;
-  const article = await articleModel.findById(id);
-  const owner = article.author.toString();
-  const user = req.user._id;
-  if (article.state === "published" && owner === user) {
-    try {
+  try {
+    const id = req.params.id;
+    const article = await articleModel.findById(id);
+    const blogAuthor = article.author.toString();
+    const currentUser = req.user._id;
+    if (article.state === "published" && blogAuthor === currentUser) {
       article.read_count++;
       article.save();
       res.status(200).send(article);
-    } catch (err) {
-      res.status(404).send({ message: "Error trying to get an article" });
     }
+  } catch (err) {
+    res.status(404).send({ message: "Error trying to get an article" });
   }
 };
 // // 11. The owner of the blog should be able to delete the blog in draft or published
@@ -149,14 +157,16 @@ const getPublishedArticle = async (req, res) => {
 async function deleteById(req, res, next) {
   try {
     const id = req.params.id;
-    const article = await articleModel.findById(id);
+    const article = await Article.findById(id);
     if (!article) {
       res.status(400).send({ message: "Article does not exist" });
     }
-    const owner = article.author.toString();
-    const user = await userModel.findById(req.user._id);
-    if (owner === req.user._id) {
+    const blogAuthor = article.author.toString();
+    const user = await User.findById(req.user._id);
+    const currentUser = req.user._id;
+    if (blogAuthor === currentUser) {
       await article.deleteOne();
+      // delete article id from user document
       user.article = user.article.filter(
         (post) => post.toString() !== article._id.toString()
       );
@@ -203,7 +213,7 @@ async function getBlogList(req, res) {
 
 //   if (firstname) {
 //     try {
-//       const user = await userModel.findOne({ first_name: firstname });
+//       const user = await User.findOne({ first_name: firstname });
 
 //       const userId = user.article.toString().split(",");
 

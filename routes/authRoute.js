@@ -1,14 +1,22 @@
-const passport = require('passport')
+const passport = require("passport");
 
-const express = require('express')
-const userRouter = express.Router()
+const express = require("express");
+const userRouter = express.Router();
 
-const authController = require('../controllers/authController')
+const authController = require("../controllers/authController");
+
+const userValidator = require("../validators/user.validator");
 
 userRouter.post(
-    '/signup',
-    passport.authenticate('signup', { session: false }), authController.signUp 
+  "/signup",
+  userValidator,
+  passport.authenticate("signup", { session: false }),
+  authController.signUp
 );
-userRouter.post('/login', passport.authenticate('login', {session:false}), authController.login)
+userRouter.post(
+  "/login",
+  passport.authenticate("login", { session: false }),
+  authController.login
+);
 
-module.exports = userRouter
+module.exports = userRouter;
