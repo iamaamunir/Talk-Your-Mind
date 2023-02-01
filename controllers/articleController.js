@@ -186,26 +186,16 @@ async function deleteById(req, res, next) {
 // c. It should also be orderable by read_count, reading_time and timestamp
 async function getBlogList(req, res) {
   // const article = await articleModel.find({});
-  const firstname = req.query.firstname;
-  const lastname = req.query.lastname;
-  const title = req.query.title;
-  const tags = req.query.tags;
-  const read_count = req.query.read_count;
-  const reading_time = req.query.reading_time;
-  const timestamp = req.query.timestamp;
-  const page = req.query.page;
-  const limit = 20;
   const features = new APIFeatures(Article.find(), req.query)
     .sort()
     .paginate()
-
     .search();
-  const tours = await features.query;
+  const articles = await features.query;
   res.status(200).json({
     status: "success",
-    results: tours.length,
+    results: articles.length,
     data: {
-      tours,
+      articles,
     },
   });
 }
