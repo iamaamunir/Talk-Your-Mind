@@ -16,7 +16,9 @@ articleRouter
   .post(articleValidator, articleController.createArticle)
   .get(articleController.getBlogByOwner);
 
-articleRouter.get("/blog/publish/:id", articleController.getPublishedArticle);
+articleRouter
+  .route("/blog/publish/me/:id")
+  .get(articleController.getPublishedArticle);
 articleRouter
   .route("/blog/:id")
   .patch(articleController.updateById)
