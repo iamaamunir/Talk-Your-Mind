@@ -43,6 +43,9 @@ const articleSchema = new schema({
   updatedAt: {
     type: Date,
   },
+  owner: {
+    type: String,
+  },
 });
 
 module.exports = mongoose.model("article", articleSchema);

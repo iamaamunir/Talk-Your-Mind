@@ -16,7 +16,9 @@ exports.createArticle = async (req, res, next) => {
     const wordsPerMinute = totalWordCount / 200;
     const reading_time =
       Math.round(wordsPerMinute) === 0 ? 1 : Math.round(wordsPerMinute);
-
+    const ownerFirstName = user.first_name;
+    const ownerLastName = user.last_name;
+    const owner = `${ownerFirstName} ${ownerLastName}`;
     const articleObject = {
       title,
       description,
@@ -24,6 +26,7 @@ exports.createArticle = async (req, res, next) => {
       author: { _id: req.user._id },
       reading_time,
       body,
+      owner,
     };
     const article = new Article(articleObject);
     const savedArticle = await article.save();
@@ -158,8 +161,8 @@ exports.deleteById = catchAsync(async (req, res, next) => {
 exports.getBlogList = catchAsync(async (req, res, next) => {
   // const article = await articleModel.find({});
   const features = new APIFeatures(Article.find(), req.query)
-    .sort()
-    .paginate()
+    // .sort()
+    // .paginate()
     .search();
   const articles = await features.query;
   res.status(200).json({
@@ -170,6 +173,14 @@ exports.getBlogList = catchAsync(async (req, res, next) => {
     },
   });
 });
+
+// search published article by author
+
+// exports.articleByAuthor = catchAsync(async (req, res, next)=>{
+//   const author = req.query
+//   const author = Article.
+// })
+
 // if(article.state == 'published'){
 
 //   if (firstname) {
