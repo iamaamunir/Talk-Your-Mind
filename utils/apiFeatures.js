@@ -60,13 +60,11 @@ class APIFeatures {
     return this;
   }
   search() {
-    if (this.queryString.firstname) {
-      const queryObj = { ...this.queryString };
-      let queryStr = JSON.stringify(queryObj);
-      console.log(JSON.parse(queryStr));
-
-      this.query = this.query.find(JSON.parse(queryStr));
+    if (this.queryString.author) {
+      const author = this.queryString.author.split(",").join(" ");
+      this.query = this.query.find({ owner: { $regex: author } });
     }
+    return this;
   }
 }
 
