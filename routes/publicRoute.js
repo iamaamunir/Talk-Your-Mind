@@ -1,10 +1,12 @@
 const express = require("express");
 const publicRouter = express.Router();
 
-const publicController = require("../controllers/publicController");
+const articleController = require("../controllers/articleController");
 
-publicRouter.get("/blog/publish/:id", publicController.getPublishedArticle);
+publicRouter
+  .route("/blog/publish/:id")
+  .get(articleController.getPublishedArticle);
 
-publicRouter.get("/blog/list", publicController.getBlogList);
+publicRouter.get("/blog/list", articleController.getBlogList);
 
 module.exports = publicRouter;

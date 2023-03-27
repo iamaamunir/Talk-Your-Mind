@@ -17,13 +17,9 @@ articleRouter
   .get(articleController.getBlogByOwner);
 
 articleRouter
-  .route("/blog/publish/me/:id")
-  .get(articleController.getPublishedArticle);
-articleRouter
   .route("/blog/:id")
   .patch(articleController.updateById)
   .delete(articleController.deleteById);
 articleRouter.patch("/blog/state/:id", articleController.updateStateById);
-articleRouter.get("/blog/list", articleController.getBlogList);
 
 module.exports = articleRouter;

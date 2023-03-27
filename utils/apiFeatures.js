@@ -21,6 +21,7 @@ class APIFeatures {
       this.query = this.query
         .sort(sortBy)
         .populate("author", "first_name last_name");
+      console.log(sortBy);
     } else {
       this.query = this.query.sort("-createdAt");
     }
@@ -62,7 +63,18 @@ class APIFeatures {
   search() {
     if (this.queryString.author) {
       const author = this.queryString.author.split(",").join(" ");
-      this.query = this.query.find({ owner: { $regex: author } });
+      this.query = this.query.find({
+        owner: { $regex: author },
+        // state: "published",
+      });
+    }
+    if (this.queryString.title) {
+      const title = this.queryString.title.split(",").join(" ");
+      this.query = this.query.find({ title: { $regex: title } });
+    }
+    if (this.queryString.tags) {
+      const tags = this.queryString.tags.split(",").join(" ");
+      this.query = this.query.find({ tags: { $regex: tags } });
     }
     return this;
   }
