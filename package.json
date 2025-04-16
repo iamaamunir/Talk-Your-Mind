@@ -4,6 +4,7 @@
   "description": "",
   "main": "app.js",
   "scripts": {
+    "type":"module",
     "test": "cross-env jest --testEnvironment=node --verbose --forceExit --watchAll --maxWorkers=1 --detectOpenHandles",
     "start:dev": "nodemon index.js",
     "start:prod": "NODE_ENV = production nodemon index.js"

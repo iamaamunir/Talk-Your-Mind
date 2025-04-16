@@ -1,9 +1,6 @@
-const mongoose = require("mongoose");
-const schema = mongoose.Schema;
-const bcrypt = require("bcrypt");
-// 1. Users should have a first_name, last_name, email, password, (you can add other
-//     attributes you want to store about the user)
-const userSchema = new schema({
+import mongoose from "mongoose";
+import bcrypt from "bcrypt";
+const userSchema = new mongoose.Schema({
   email: {
     type: String,
     required: [true, "Email is required"],
@@ -14,11 +11,11 @@ const userSchema = new schema({
     required: [true, "Password is required"],
   },
 
-  first_name: {
+  firstname: {
     type: String,
     required: [true, "first name is required"],
   },
-  last_name: {
+  lastname: {
     type: String,
     required: [true, "last name is required"],
   },
@@ -28,6 +25,11 @@ const userSchema = new schema({
       ref: "articles",
     },
   ],
+  isActive: {
+    type: String,
+    enum: ['active', "inactive"],
+    default: "active"
+  },
 });
 
 userSchema.pre("save", async function (next) {
@@ -50,5 +52,5 @@ userSchema.set("toJSON", {
     delete returnedObject.__v;
   },
 });
-
-module.exports = mongoose.model("user", userSchema);
+const userModel = mongoose.model("user", userSchema);
+export default userModel;
