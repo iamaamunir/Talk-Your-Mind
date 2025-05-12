@@ -1,15 +1,15 @@
 // Strategy to sign into the app and sign up
 import passport from "passport";
-import { ExtractJwt } from "passport-jwt";
-import { JWTStrategy } from "passport-jwt";
-import { localStrategy } from "passport-local";
-import { dotenv } from "dotenv";
+// import { ExtractJwt } from "passport-jwt";
+import { Strategy as JwtStrategy, ExtractJwt } from "passport-jwt";
+import { Strategy as LocalStrategy } from "passport-local";
+import * as dotenv from "dotenv";
 dotenv.config();
-import userModel from "../models/userModel";
+import userModel from "../models/userModel.js";
 
 // Auth endpoints with JWTStrategy
 passport.use(
-  new JWTStrategy(
+  new JwtStrategy(
     {
       secretOrKey: process.env.JWT_SECRET,
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -32,7 +32,7 @@ passport.use(
 
 passport.use(
   "signup",
-  new localStrategy(
+  new LocalStrategy(
     {
       usernameField: "email",
       passwordField: "password",
@@ -57,6 +57,7 @@ passport.use(
         });
         return done(null, user);
       } catch (err) {
+        console.log(err);
         done(err);
       }
     }
@@ -66,7 +67,7 @@ passport.use(
 passport.use(
   "login",
   //   create strategy and configure state
-  new localStrategy(
+  new LocalStrategy(
     {
       usernameField: "email",
       passwordField: "password",
@@ -85,8 +86,8 @@ passport.use(
           _id: user._id,
           firstname: user.firstname,
           lastname: user.lastname,
-          email: user.email
-        }
+          email: user.email,
+        };
         return done(null, userDetails, { message: "Login successfull" });
       } catch (err) {
         return done(err);

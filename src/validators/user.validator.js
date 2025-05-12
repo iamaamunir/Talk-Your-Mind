@@ -1,7 +1,7 @@
-const Joi = require("joi");
+import Joi from 'joi'
 const userValidator = Joi.object({
-  first_name: Joi.string().pattern(new RegExp("^[a-zA-Z]")).max(25),
-  last_name: Joi.string().pattern(new RegExp("^[a-zA-Z]")).max(25),
+  firstname: Joi.string().pattern(new RegExp("^[a-zA-Z]")).max(25),
+  lastname: Joi.string().pattern(new RegExp("^[a-zA-Z]")).max(25),
   password: Joi.string()
     .pattern(/^(?=.*[0-9])(?=.*[a-zA-Z])([a-zA-Z0-9]+)$/)
     .min(8)
@@ -25,4 +25,4 @@ const validateUserMiddelWare = async (req, res, next) => {
   }
 };
 
-module.exports = validateUserMiddelWare;
+export default validateUserMiddelWare;
